@@ -29,7 +29,7 @@ def signup():
     return jsonify({"message": "Registered successfully!"}), 200
 
 
-@auth.route('/login', methods = ['POST'])
+@auth.route('/login')
 def login():
     data = request.json
 
