@@ -11,7 +11,7 @@ def add_sales():
         if session["user_role"] == "vendor":
             data = request.json
 
-            product_name = data.get('product') #can be name orr id depends on android input
+            product_name = data.get('product') #can be name or id depends on android input
             quantity = data.get('quantity')
 
             product = products.query.filter_by(name = product_name).first()
@@ -35,6 +35,9 @@ def add_sales():
                 quantity = quantity,
                 sales_date = today
             )
+
+            db.session.add(new_sale)
+            db.session.commit()
 
             return jsonify({"message":"new sale added successfully!"}), 201
         
