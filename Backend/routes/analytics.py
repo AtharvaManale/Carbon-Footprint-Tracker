@@ -56,7 +56,7 @@ def trends():
 
         return jsonify({"message":"Emission trend!",
                         "emission_trend" : emission_trend}), 200
-    
+
     return jsonify({"error":"Not logged in!"}), 401
 
 @analytics.route("/ratings", methods = ['GET'])

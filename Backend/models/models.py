@@ -8,9 +8,10 @@ class users(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     username = db.Column(db.String(100), nullable = False)
     password = db.Column(db.String(255), nullable = False)
-    shop_name = db.Column(db.String(100))
+    shop_name = db.Column(db.String(100), nullable = True)
     role = db.Column(db.String(50), default = "vendor")
     created_at = db.Column(db.DateTime, default = datetime.utcnow)
+    ending_at = db.Column(db.Date, nullable = True)
 
     def create_password(self, password):
         self.password = generate_password_hash(password)
