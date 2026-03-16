@@ -8,7 +8,7 @@ analytics = Blueprint("analytics", __name__)
 @analytics.route('/totalCO2', methods = ['GET', 'POST'])
 def total_CO2():
     if "user_id" in session:
-        if session["role"] == "vendor":
+        if session["user_role"] == "vendor":
             today = date.today()
             sales = sales_data.query.filter(sales_data.vendor_id == session["user_id"], sales_data.sales_date == today).all()
 
