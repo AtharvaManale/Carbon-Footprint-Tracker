@@ -45,3 +45,11 @@ def login():
     session['user_role'] = user.role
 
     return jsonify({'message' : 'Logged in successfully!'}),200
+
+
+@auth.route('/logout')
+def logout():
+    if "user_id" in session:
+        session.clear()
+        return jsonify({"message":"Logged out successfully!"}), 200
+    return jsonify({"error":"Not logged in!"}), 403
