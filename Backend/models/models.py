@@ -22,14 +22,14 @@ class users(db.Model):
 class products(db.Model):
     product_id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     name = db.Column(db.String(200))
-    emission_factor = db.Collumn(db.Float)
+    emission_factor = db.Column(db.Float)
 
 class sales_data(db.Model):
     sales_id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     product_id= db.Column(db.Integer, db.ForeignKey("products.product_id"))
     quantity = db.Column(db.Integer, nullable = True)
-    sales_date = db.Collumn(db.Date, default = date.today)
+    sales_date = db.Column(db.Date, default = date.today)
 
 class daily_emissions(db.Model):
     emission_id = db.Column(db.Integer, primary_key = True, autoincrement = True)

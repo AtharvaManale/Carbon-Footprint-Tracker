@@ -1,4 +1,3 @@
-from flask import Flask
 from Backend import create_app
 
 app = create_app()

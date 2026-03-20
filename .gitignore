@@ -1,3 +1,5 @@
 .env
 .mini
 .vscode
+migrations
+__pycache__/
