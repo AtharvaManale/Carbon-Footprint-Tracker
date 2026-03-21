@@ -1,6 +1,7 @@
 from flask import jsonify, request, Blueprint, session
 from Backend.models.models import users
 from Backend.extensions import db
+from datetime import datetime
 
 auth = Blueprint("auth", __name__)
 
@@ -16,20 +17,26 @@ def signup():
     if data['confirm_password'] != data['password']:
         return jsonify("Please enter similar passwords"), 400
 
+    role = data.get("role")
+
+    end_date = None
+    if role != "auditor" and data.get("end"):
+        end_date = datetime.strptime(data["end"], "%d-%m-%Y")
+
     user = users(
-        username = data['username'],
-        password = users.create_password(data["password"]),
-        shop_name = data.get("shop_name"),
-        role = data.get("role")
+        username=data["username"],
+        role=role,
+        shop_name=data.get("shop_name") if role != "auditor" else None,
+        ending_at=end_date
     )
 
+    user.create_password(data["password"])
     db.session.add(user)
     db.session.commit()
 
     return jsonify({"message": "Registered successfully!"}), 200
 
-
-@auth.route('/login')
+@auth.route('/login', methods = ['POST'])
 def login():
     data = request.json
 
@@ -46,8 +53,7 @@ def login():
 
     return jsonify({'message' : 'Logged in successfully!'}),200
 
-
-@auth.route('/logout')
+@auth.route('/logout', methods = ['GET', 'POST'])
 def logout():
     if "user_id" in session:
         session.clear()

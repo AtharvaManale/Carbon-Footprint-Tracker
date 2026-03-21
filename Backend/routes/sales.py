@@ -50,7 +50,7 @@ def add_sales():
 def salesdata():
     if "user_id" in session:
         data = {}
-        last_7days = date.today - timedelta(days=7)
+        last_7days = date.today() - timedelta(days=7)
 
         sales = sales_data.query.filter(sales_data.vendor_id == session["user_id"], sales_data.sales_date >= last_7days).all()
 

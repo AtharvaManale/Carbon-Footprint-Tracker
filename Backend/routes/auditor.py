@@ -64,7 +64,7 @@ def vendors_sales_data(id):
 @auditor.route("/recommendations", methods=["GET"])
 def recommendations():
     if "user_id" in session:
-        if session["role"] == "auditor":
+        if session["user_role"] == "auditor":
             vendors = users.query.filter_by(role="vendor").all()
             limit_date = date.today() - timedelta(days=7)
 
