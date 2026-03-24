@@ -27,7 +27,7 @@ def add_sales():
                 db.session.commit()
 
                 return jsonify({"message" : "Sales updated successfully!",
-                               "updated quantity": sale.quantity}), 202
+                               "updated_quantity": sale.quantity}), 202
             
             new_sale = sales_data(
                 vendor_id = session["user_id"],

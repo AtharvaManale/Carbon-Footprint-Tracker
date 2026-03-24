@@ -2,6 +2,7 @@ from flask import session, Blueprint, jsonify
 from Backend.models.models import products, sales_data, daily_emissions, users
 from datetime import date, timedelta
 from Backend.extensions import db
+from collections import defaultdict
 
 analytics = Blueprint("analytics", __name__)
 
@@ -76,8 +77,16 @@ def ratings():
             if not emissions:
                 continue
 
-            total = sum(e.total_co2 for e in emissions)
-            avg_emission = total / len(emissions)
+            emissions_by_date = defaultdict(float)
+
+            for e in emissions:
+                emissions_by_date[e.sales_date] += e.total_co2
+
+            total = sum(emissions_by_date.values())
+
+            num_days = len(emissions_by_date)
+
+            avg_emission = total / num_days if num_days > 0 else 0
 
             if avg_emission <= 5:
                 rating = 5
@@ -92,7 +101,7 @@ def ratings():
 
             ratings.append({
                 "vendor": vendor.username,
-                "shop": vendor.shop_name,
+                "shop_name": vendor.shop_name,
                 "avg_co2": float(avg_emission),
                 "rating": rating
             })

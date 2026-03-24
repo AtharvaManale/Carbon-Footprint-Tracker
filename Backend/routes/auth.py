@@ -9,7 +9,7 @@ auth = Blueprint("auth", __name__)
 def signup():
     data = request.json
 
-    user = users.query.filter_by(username = data['username']).first()
+    user = users.query.filter_by(username = data['user_name']).first()
 
     if user:
         return jsonify("Username already used!"), 400
@@ -24,7 +24,7 @@ def signup():
         end_date = datetime.strptime(data["end"], "%d-%m-%Y")
 
     user = users(
-        username=data["username"],
+        username=data["user_name"],
         role=role,
         shop_name=data.get("shop_name") if role != "auditor" else None,
         ending_at=end_date
@@ -40,7 +40,7 @@ def signup():
 def login():
     data = request.json
 
-    user = users.query.filter_by(username = data.get('username')).first()
+    user = users.query.filter_by(username = data.get('user_name')).first()
 
     if not user:
         return jsonify({'error': "user doesn't exists"}), 404

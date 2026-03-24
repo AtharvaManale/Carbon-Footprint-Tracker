@@ -2,6 +2,7 @@ from flask import session, request, jsonify, Blueprint
 from Backend.extensions import db
 from Backend.models.models import users, daily_emissions, sales_data, products
 from datetime import date, timedelta
+from collections import defaultdict
 
 auditor = Blueprint("auditor", __name__)
 
@@ -12,10 +13,10 @@ def panel():
             vendors = users.query.filter_by(role = "vendor").all()
             vendors_data = []
             for vendor in vendors:
-                vendors_data.append({"id": vendor.id,
-                                    "vendor": vendor.username,
-                                     "shop": vendor.shop_name,
-                                     "end": vendor.ending_at})
+                vendors_data.append({"vendor_id": vendor.id,
+                                    "vendor_name": vendor.username,
+                                     "shop_name": vendor.shop_name,
+                                     "end_at": vendor.ending_at})
         
             return jsonify({"message":"Vendors data for dashboard!",
                            "vendors": vendors_data }), 200
@@ -76,10 +77,19 @@ def recommendations():
 
                 if not emissions:
                     continue
+            
+                emissions_by_date = defaultdict(float)
+
+                for e in emissions:
+                    emissions_by_date[e.sales_date] += e.total_co2
+
+                total = sum(emissions_by_date.values())
+
+                num_days = len(emissions_by_date)
+
+                avg_emission = total / num_days if num_days > 0 else 0
 
                 values = [float(e.total_co2) for e in emissions]
-
-                avg = sum(values) / len(values)
 
                 trend_value = values[-1] - values[0]
 
@@ -90,31 +100,31 @@ def recommendations():
                 else:
                     trend = "stable"
 
-                if avg <= 5 and trend == "increasing":
+                if avg_emission <= 5 and trend == "increasing":
                     suggestion = "Monitor vendor"
 
-                elif avg <= 5 and trend == "decreasing":
+                elif avg_emission <= 5 and trend == "decreasing":
                     suggestion = "Excellent vendor"
 
-                elif 5 < avg <= 10 and trend == "increasing":
+                elif 5 < avg_emission <= 10 and trend == "increasing":
                     suggestion = "Warning"
 
-                elif 5 < avg <= 10 and trend == "decreasing":
+                elif 5 < avg_emission <= 10 and trend == "decreasing":
                     suggestion = "Acceptable"
 
-                elif avg > 10 and trend == "increasing":
+                elif avg_emission > 10 and trend == "increasing":
                     suggestion = "Replace vendor"
 
-                elif avg > 10 and trend == "decreasing":
+                elif avg_emission > 10 and trend == "decreasing":
                     suggestion = "Give improvement time"
 
                 else:
                     suggestion = "Stable performance"
 
-                results.append({"id": vendor.id,
-                                "vendor": vendor.username,
-                                "shop": vendor.shop_name,
-                                "avg_co2": round(avg, 2),
+                results.append({"vendor_id": vendor.id,
+                                "vendor_name": vendor.username,
+                                "shop_name": vendor.shop_name,
+                                "avg_co2": round(avg_emission, 2),
                                 "trend": trend,
                                 "recommendation": suggestion
                                 })
