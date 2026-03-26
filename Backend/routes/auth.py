@@ -5,36 +5,54 @@ from datetime import datetime
 
 auth = Blueprint("auth", __name__)
 
-@auth.route('/signup', methods = ['POST'])
+@auth.route('/auditors', methods = ['GET'])
+def get_auditors():
+    auditors = users.query.filter_by(role = "auditor").all()
+    return jsonify({"auditors": [{"auditor_id":auditor.id, "auditor_name":auditor.username}for auditor in auditors]}), 200
+
+@auth.route('/signup', methods=['POST'])
 def signup():
     data = request.json
 
-    user = users.query.filter_by(username = data['user_name']).first()
-
+    user = users.query.filter_by(username=data['user_name']).first()
     if user:
-        return jsonify("Username already used!"), 400
+        return jsonify({"error": "Username already used!"}), 400
 
     if data['confirm_password'] != data['password']:
-        return jsonify("Please enter similar passwords"), 400
+        return jsonify({"error": "Passwords do not match"}), 400
 
     role = data.get("role")
-
+    auditor_id = None
     end_date = None
-    if role != "auditor" and data.get("end"):
-        end_date = datetime.strptime(data["end"], "%d-%m-%Y")
+
+    if role != "auditor":
+
+        if not data.get("auditor_id"):
+            return jsonify({"error": "Auditor is required"}), 400
+
+        auditor = users.query.get(data["auditor_id"])
+        if not auditor or auditor.role != "auditor":
+            return jsonify({"error": "Invalid auditor"}), 400
+
+        auditor_id = auditor.id
+
+        if data.get("end"):
+            end_date = datetime.strptime(data["end"], "%d-%m-%Y")
 
     user = users(
         username=data["user_name"],
         role=role,
         shop_name=data.get("shop_name") if role != "auditor" else None,
+        auditor_id=auditor_id,
         ending_at=end_date
     )
 
     user.create_password(data["password"])
+
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "Registered successfully!"}), 200
+    return jsonify({"message": "Registered successfully!"}), 201
 
 @auth.route('/login', methods = ['POST'])
 def login():
@@ -59,3 +77,18 @@ def logout():
         session.clear()
         return jsonify({"message":"Logged out successfully!"}), 200
     return jsonify({"error":"Not logged in!"}), 403
+
+@auth.route('/check', methods = ['GET'])
+def check_auth():
+    if "user_id" in session:
+        user = users.query.get(session["user_id"])
+        if user:
+            return jsonify({
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "shop_name": user.shop_name,
+                    "role": user.role
+                }
+            }), 200
+    return jsonify({"user": None}), 401

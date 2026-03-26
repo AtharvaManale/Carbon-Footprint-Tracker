@@ -11,7 +11,7 @@ def total_CO2():
     if "user_id" in session:
         if session["user_role"] == "vendor":
             today = date.today()
-            sales = sales_data.query.filter(sales_data.vendor_id == session["user_id"], sales_data.sales_date == today).all()
+            sales = sales_data.query.filter_by(vendor_id = session["user_id"],sales_date = today).all()
 
             totalco2 = 0
             for sale in sales:
@@ -44,26 +44,35 @@ def total_CO2():
     
     return jsonify({"error":"Not logged in!"}), 401
 
-@analytics.route("/emission-trend", methods = ['GET'])
-def trends():
+@analytics.route("/emission-trend/<int:id>", methods = ['GET'])
+def trends(id):
     if "user_id" in session:
-        limit_date = date.today() - timedelta(days=7)
+        if session["user_role"] == "auditor":
+            limit_date = date.today() - timedelta(days=7)
 
-        emissions = daily_emissions.query.filter(daily_emissions.vendor_id == session["user_id"], daily_emissions.sales_date >= limit_date).all()
-        emission_trend = []
-        for emission in emissions:
-            emission_trend.append({"date": emission.sales_date.strftime("%d-%m-%Y"), 
-                                   "total_co2": float(emission.total_co2)})
+            emissions = daily_emissions.query.filter(daily_emissions.vendor_id == id, daily_emissions.sales_date >= limit_date).all()
+            emission_trend = []
+            for emission in emissions:
+                emission_trend.append({"date": emission.sales_date.strftime("%d-%m-%Y"), 
+                                    "total_co2": float(emission.total_co2)})
+            days = len(emission_trend)
+            date_issue = False
+            if days < 7:
+                date_issue = True
 
-        return jsonify({"message":"Emission trend!",
-                        "emission_trend" : emission_trend}), 200
+            return jsonify({"message":"Emission trend!",
+                            "emission_trend" : emission_trend,
+                            "days_recorded":days,
+                            "date_issue":date_issue}), 200
+        
+        return jsonify({"error":"Only auditors have access to emission trends"})
 
     return jsonify({"error":"Not logged in!"}), 401
 
 @analytics.route("/ratings", methods = ['GET'])
 def ratings():
     if "user_id" in session:
-        vendors = users.query.filter_by(role = "vendor").all()
+        vendors = users.query.filter_by(role = "vendor", auditor_id = session['user_id']).all()
         limit_date = date.today() - timedelta(days=7)
 
         ratings = []
@@ -88,13 +97,13 @@ def ratings():
 
             avg_emission = total / num_days if num_days > 0 else 0
 
-            if avg_emission <= 5:
+            if avg_emission <= 200:
                 rating = 5
-            elif avg_emission <= 10:
+            elif avg_emission <= 350:
                 rating = 4
-            elif avg_emission <= 15:
+            elif avg_emission <= 500:
                 rating = 3
-            elif avg_emission <= 20:
+            elif avg_emission <= 700:
                 rating = 2
             else:
                 rating = 1

@@ -5,6 +5,13 @@ from datetime import date, timedelta
 
 sales = Blueprint("sales", __name__)
 
+@sales.route('/products', methods = ['GET'])
+def get_products():
+    if "user_id" in session:
+        Products = products.query.all()
+        return jsonify({"Products":[{"Product_id":Product.product_id,
+                                     "Product_name":Product.name}] for Product in Products}), 200
+
 @sales.route('/add', methods = ['POST', 'PUT'])
 def add_sales():
     if "user_id" in session:
@@ -45,6 +52,35 @@ def add_sales():
     
     return jsonify("Not logged in!"), 401
 
+@sales.route('/update', methods=['PUT'])
+def update_sale():
+    if "user_id" in session and session["user_role"] == "vendor":
+        data = request.json
+
+        product_name = data.get("product")
+        quantity = data.get("quantity")
+        today = date.today()
+
+        product = products.query.filter_by(name=product_name).first()
+        if not product:
+            return jsonify({"error": "Invalid product"}), 400
+
+        sale = sales_data.query.filter_by(
+            vendor_id=session["user_id"],
+            product_id=product.product_id,
+            sales_date=today
+        ).first()
+
+        if not sale:
+            return jsonify({"error": "No existing sale found"}), 404
+
+        sale.quantity = quantity
+
+        db.session.commit()
+
+        return jsonify({"message": "Sale updated successfully!"}), 200
+
+    return jsonify({"error": "Unauthorized"}), 401
 
 @sales.route('/data', methods = ['GET'])
 def salesdata():

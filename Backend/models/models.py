@@ -6,10 +6,11 @@ from sqlalchemy import Numeric
 
 class users(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    username = db.Column(db.String(100), nullable = False)
+    username = db.Column(db.String(100), nullable = False, unique = True)
     password = db.Column(db.String(255), nullable = False)
     shop_name = db.Column(db.String(100), nullable = True)
     role = db.Column(db.String(50), default = "vendor")
+    auditor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = True)
     created_at = db.Column(db.DateTime, default = datetime.utcnow)
     ending_at = db.Column(db.Date, nullable = True)
 

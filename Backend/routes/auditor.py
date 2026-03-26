@@ -10,7 +10,7 @@ auditor = Blueprint("auditor", __name__)
 def panel():
     if "user_id" in session:
         if session["user_role"] == "auditor":
-            vendors = users.query.filter_by(role = "vendor").all()
+            vendors = users.query.filter_by(role = "vendor", auditor_id = session['user_id']).all()
             vendors_data = []
             for vendor in vendors:
                 vendors_data.append({"vendor_id": vendor.id,
@@ -66,7 +66,7 @@ def vendors_sales_data(id):
 def recommendations():
     if "user_id" in session:
         if session["user_role"] == "auditor":
-            vendors = users.query.filter_by(role="vendor").all()
+            vendors = users.query.filter(users.role=="vendor", users.auditor_id == session['user_id']).all()
             limit_date = date.today() - timedelta(days=7)
 
             results = []
@@ -100,22 +100,22 @@ def recommendations():
                 else:
                     trend = "stable"
 
-                if avg_emission <= 5 and trend == "increasing":
+                if avg_emission <= 200 and trend == "increasing":
                     suggestion = "Monitor vendor"
 
-                elif avg_emission <= 5 and trend == "decreasing":
+                elif avg_emission <= 200 and trend == "decreasing":
                     suggestion = "Excellent vendor"
 
-                elif 5 < avg_emission <= 10 and trend == "increasing":
+                elif 200 < avg_emission <= 350 and trend == "increasing":
                     suggestion = "Warning"
 
-                elif 5 < avg_emission <= 10 and trend == "decreasing":
+                elif 200 < avg_emission <= 350 and trend == "decreasing":
                     suggestion = "Acceptable"
 
-                elif avg_emission > 10 and trend == "increasing":
+                elif avg_emission > 500 and trend == "increasing":
                     suggestion = "Replace vendor"
 
-                elif avg_emission > 10 and trend == "decreasing":
+                elif avg_emission > 500 and trend == "decreasing":
                     suggestion = "Give improvement time"
 
                 else:
