@@ -66,7 +66,7 @@ def vendors_sales_data(id):
 def recommendations():
     if "user_id" in session:
         if session["user_role"] == "auditor":
-            vendors = users.query.filter(users.role=="vendor", users.auditor_id == session['user_id']).all()
+            vendors = users.query.filter_by(role="vendor", auditor_id=session['user_id']).all()
             limit_date = date.today() - timedelta(days=7)
 
             results = []
@@ -81,7 +81,7 @@ def recommendations():
                 emissions_by_date = defaultdict(float)
 
                 for e in emissions:
-                    emissions_by_date[e.sales_date] += e.total_co2
+                    emissions_by_date[e.sales_date] += float(e.total_co2)
 
                 total = sum(emissions_by_date.values())
 
@@ -100,22 +100,22 @@ def recommendations():
                 else:
                     trend = "stable"
 
-                if avg_emission <= 200 and trend == "increasing":
+                if avg_emission <= 50 and trend == "increasing":
                     suggestion = "Monitor vendor"
 
-                elif avg_emission <= 200 and trend == "decreasing":
+                elif avg_emission <= 50 and trend == "decreasing":
                     suggestion = "Excellent vendor"
 
-                elif 200 < avg_emission <= 350 and trend == "increasing":
+                elif 50 < avg_emission <= 100 and trend == "increasing":
                     suggestion = "Warning"
 
-                elif 200 < avg_emission <= 350 and trend == "decreasing":
+                elif 50 < avg_emission <= 100 and trend == "decreasing":
                     suggestion = "Acceptable"
 
-                elif avg_emission > 500 and trend == "increasing":
+                elif avg_emission > 200 and trend == "increasing":
                     suggestion = "Replace vendor"
 
-                elif avg_emission > 500 and trend == "decreasing":
+                elif avg_emission > 200 and trend == "decreasing":
                     suggestion = "Give improvement time"
 
                 else:

@@ -1,251 +1,363 @@
-# 🌱 Carbon Emission Monitoring System (Backend)
+# 🌱 Carbon Emission Monitoring System
 
-This backend provides APIs for a system that tracks vendor sales, calculates CO₂ emissions, analyzes trends, and helps auditors evaluate vendors based on environmental performance.
+A full-stack system to track vendor sales, calculate CO₂ emissions, analyze trends, and help auditors evaluate vendors based on environmental performance.
 
 ---
 
-# 🚀 Tech Stack
+## 🚀 Tech Stack
 
+### Backend
 - Python (Flask)
-- MySQL / SQLite
+- MySQL
 - SQLAlchemy ORM
 - Session-based Authentication
+- Flask-Migrate for DB migrations
+- Flask-CORS for cross-origin support
 
 ---
 
-# 📌 Project Workflow
+## 👥 User Roles
 
-## 1️⃣ Authentication
+| Role | Description |
+|------|-------------|
+| `auditor` | Manages and monitors a group of vendors |
+| `vendor` | Logs daily sales, tracked by an auditor |
 
-- Vendors and Auditors can **Sign Up / Login**
-- Session-based authentication is used
-- After login, user role determines access:
-  - `vendor`
-  - `auditor`
-
----
-
-# 📱 Android App Flow (UI Guide)
-
-## 👤 Vendor Side
-
-### 🔐 1. Signup / Login Screen
-
-- Fields:
-  - Username
-  - Password
-  - Shop Name (for vendors)
-
-- APIs:
-  - `POST /signup`
-  - `POST /login`
+Every vendor is assigned to one auditor at signup. Vendors have a contract end date managed by the auditor.
 
 ---
 
-### 🏠 2. Vendor Home Dashboard
+## 📁 Project Structure
 
-Display:
-
-- Username
-- Shop Name
-- ⭐ Rating
-- 🏆 Rank
-- 📊 Average CO₂ Emission
-
-APIs:
-
-- `GET /ratings`
-- `GET /emission-trend`
-
----
-
-### 📝 3. Daily Sales Input Form
-
-Dynamic form:
-
-- Dropdown to select product
-- Input field for quantity
-- Multiple entries allowed
-
-API:
-
-- `POST /sales/add`
-
----
-
-### 📊 4. Emission Trend Graph
-
-- Show last 7 days CO₂ emission graph
-
-API:
-
-- `GET /emission-trend`
-
----
-
-## 🧑‍💼 Auditor Side
-
-### 🔐 1. Login / Signup
-
-Same as vendor (role = auditor)
-
----
-
-### 📋 2. Auditor Dashboard (Vendor List)
-
-Display:
-
-- Vendor Name
-- Shop Name
-
-API:
-
-- `GET /vendors`
-
----
-
-### 📊 3. Vendor Detail Screen
-
-When auditor clicks a vendor:
-
-Show:
-
-- Last 7 days sales
-- Daily emissions graph
-
-API:
-
-- `GET /sales/<vendor_id>`
-
----
-
-### 🧠 4. Recommendations Panel
-
-Show:
-
-- Avg CO₂
-- Trend (increasing/decreasing)
-- Recommendation
-
-API:
-
-- `GET /recommendations`
-
----
-
-# 🔌 API Endpoints Summary
-
-## 🔐 Auth
-
-| Method | Endpoint | Description   |
-| ------ | -------- | ------------- |
-| POST   | /signup  | Register user |
-| POST   | /login   | Login user    |
-
----
-
-## 🛒 Sales
-
-| Method | Endpoint    | Description              |
-| ------ | ----------- | ------------------------ |
-| POST   | /sales/add  | Add/update daily sales   |
-| GET    | /sales/data | Vendor last 7 days sales |
-
----
-
-## 📊 Analytics
-
-| Method | Endpoint        | Description               |
-| ------ | --------------- | ------------------------- |
-| POST   | /totalCO2       | Calculate daily emission  |
-| GET    | /emission-trend | Get emission graph data   |
-| GET    | /ratings        | Get vendor ratings & rank |
-
----
-
-## 🧑‍💼 Auditor
-
-| Method | Endpoint         | Description              |
-| ------ | ---------------- | ------------------------ |
-| GET    | /vendors         | List all vendors         |
-| GET    | /sales/<id>      | Vendor sales + emissions |
-| GET    | /recommendations | Vendor evaluation        |
-
----
-
-# 🧠 Core Logic
-
-## CO₂ Calculation
-
-```bash
-    "CO2 = Quantity * Emission Factor"
+```
+Backend/
+├── routes/
+│   ├── auth.py         # Authentication routes
+│   ├── sales.py        # Sales management routes
+│   ├── analytics.py    # CO2 analytics routes
+│   └── auditor.py      # Auditor panel routes
+├── models/
+│   └── models.py       # Database models
+├── extensions.py       # DB and Migrate instances
+├── config.py           # Environment config
+└── __init__.py         # App factory
+run.py                  # App entry point
 ```
 
-Emission factors are predefined for each product.
+---
 
-('Plastic Cup', 2.5),
-('Paper Cup', 1.2),
-('Plastic Plate', 3.0),
-('Paper Plate', 1.5),
-('Plastic Spoon', 1.8),
-('Wooden Spoon', 0.9),
-('Steel Bottle', 6.5),
-('Plastic Bottle', 3.5),
-('Aluminum Can', 4.0),
-('Glass Bottle', 5.0),
-('Food Packaging Plastic', 2.8),
-('Food Packaging Paper', 1.4),
-('Straw Plastic', 1.2),
-('Straw Paper', 0.6),
-('Carry Bag Plastic', 2.2),
-('Carry Bag Cloth', 0.5),
-('Thermocol Plate', 3.8),
-('Reusable Container', 1.0)
+## 🗄️ Database Models
+
+### `users`
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Integer PK | Auto increment |
+| username | String | Unique username |
+| password | String | Hashed password |
+| shop_name | String | Vendor shop name (null for auditors) |
+| role | String | `vendor` or `auditor` |
+| auditor_id | FK → users.id | Assigned auditor (vendors only) |
+| created_at | DateTime | Registration date |
+| ending_at | Date | Contract end date (vendors only) |
+
+### `products`
+| Field | Type | Description |
+|-------|------|-------------|
+| product_id | Integer PK | Auto increment |
+| name | String | Product name |
+| emission_factor | Float | CO₂ per unit |
+
+### `sales_data`
+| Field | Type | Description |
+|-------|------|-------------|
+| sales_id | Integer PK | Auto increment |
+| vendor_id | FK → users.id | Vendor who made the sale |
+| product_id | FK → products.id | Product sold |
+| quantity | Integer | Quantity sold |
+| sales_date | Date | Date of sale |
+
+### `daily_emissions`
+| Field | Type | Description |
+|-------|------|-------------|
+| emission_id | Integer PK | Auto increment |
+| vendor_id | FK → users.id | Vendor |
+| total_co2 | Numeric(5,2) | Total CO₂ for the day |
+| sales_date | Date | Date of emission record |
 
 ---
 
-## 📈 Rating System
+## 🔌 API Reference
 
-Based on **average CO₂ (last 7 days)**:
+### 🔐 Auth — `/auth`
 
-| Avg CO₂ | Rating     |
-| ------- | ---------- |
-| ≤ 5     | ⭐⭐⭐⭐⭐ |
-| ≤ 10    | ⭐⭐⭐⭐   |
-| ≤ 15    | ⭐⭐⭐     |
-| ≤ 20    | ⭐⭐       |
-| > 20    | ⭐         |
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| GET | `/auth/auditors` | Public | Get list of all auditors |
+| POST | `/auth/signup` | Public | Register new user |
+| POST | `/auth/login` | Public | Login user |
+| GET | `/auth/logout` | Any | Logout user |
+| GET | `/auth/check` | Any | Check current session |
+
+#### POST `/auth/signup`
+```json
+{
+  "user_name": "john",
+  "password": "pass123",
+  "confirm_password": "pass123",
+  "role": "vendor",
+  "shop_name": "John's Shop",
+  "auditor_id": 1,
+  "end": "31-12-2025"
+}
+```
+
+#### GET `/auth/check` Response
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "john",
+    "shop_name": "John's Shop",
+    "role": "vendor"
+  }
+}
+```
+
+---
+
+### 🛒 Sales — `/sales`
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| GET | `/sales/products` | Vendor | Get all available products |
+| POST | `/sales/add` | Vendor | Add or update today's sale |
+| PUT | `/sales/update` | Vendor | Overwrite quantity for a sale |
+| GET | `/sales/data` | Vendor | Get own last 7 days sales |
+
+#### POST `/sales/add`
+```json
+{
+  "product": "Plastic Cup",
+  "quantity": 50
+}
+```
+
+#### GET `/sales/data` Response
+```json
+{
+  "sales": {
+    "28-03-2026": [
+      { "product": "Plastic Cup", "quantity": 50 }
+    ]
+  }
+}
+```
 
 ---
 
-## 📊 Recommendation Logic
+### 📊 Analytics — `/analytics`
 
-Based on:
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/analytics/totalCO2` | Vendor | Calculate and save today's emission |
+| GET | `/analytics/emission-trend/<id>` | Auditor | Get 7-day emission trend for a vendor |
+| GET | `/analytics/ratings` | Any | Get vendor ratings and rankings |
 
-- Average CO₂
-- Emission Trend
+#### GET `/analytics/ratings` Response (vendor)
+```json
+{
+  "ratings": [...],
+  "rating": 4,
+  "rank": 2
+}
+```
 
-| Condition           | Recommendation |
-| ------------------- | -------------- |
-| Low + Decreasing    | Excellent      |
-| Low + Increasing    | Monitor        |
-| Medium + Increasing | Warning        |
-| High + Increasing   | Replace Vendor |
+#### GET `/analytics/emission-trend/<id>` Response
+```json
+{
+  "emission_trend": [
+    { "date": "28-03-2026", "total_co2": 450.5 }
+  ],
+  "days_recorded": 5,
+  "date_issue": true
+}
+```
+
+---
+
+### 🧑‍💼 Auditor — `/auditor`
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| GET | `/auditor/vendors` | Auditor | List all vendors under this auditor |
+| GET | `/auditor/sales/<id>` | Auditor | Get vendor's last 7 days sales + emissions |
+| GET | `/auditor/recommendations` | Auditor | Get recommendations for all vendors |
+
+#### GET `/auditor/vendors` Response
+```json
+{
+  "vendors": [
+    {
+      "vendor_id": 2,
+      "vendor_name": "john",
+      "shop_name": "John's Shop",
+      "end_at": "2025-12-31"
+    }
+  ]
+}
+```
+
+#### GET `/auditor/recommendations` Response
+```json
+{
+  "data": [
+    {
+      "vendor_id": 2,
+      "vendor_name": "john",
+      "shop_name": "John's Shop",
+      "avg_co2": 320.5,
+      "trend": "increasing",
+      "recommendation": "Warning"
+    }
+  ]
+}
+```
 
 ---
 
-# 💡 Notes for Android Developers
+## 🧠 Core Logic
 
-- Use **dropdown for product selection**
-- Store `vendor_id` from `/vendors` API
-- Use **RecyclerView** for lists
-- Use **Graph library** for emission trends
-- All APIs return JSON
+### CO₂ Calculation
+```
+CO₂ = Quantity × Emission Factor
+```
+
+### Product Emission Factors
+
+| Product | Factor (kg CO₂/unit) |
+|---------|----------------------|
+| Plastic Cup | 2.5 |
+| Paper Cup | 1.2 |
+| Plastic Plate | 3.0 |
+| Paper Plate | 1.5 |
+| Plastic Spoon | 1.8 |
+| Wooden Spoon | 0.9 |
+| Steel Bottle | 6.5 |
+| Plastic Bottle | 3.5 |
+| Aluminum Can | 4.0 |
+| Glass Bottle | 5.0 |
+| Food Packaging Plastic | 2.8 |
+| Food Packaging Paper | 1.4 |
+| Straw Plastic | 1.2 |
+| Straw Paper | 0.6 |
+| Carry Bag Plastic | 2.2 |
+| Carry Bag Cloth | 0.5 |
+| Thermocol Plate | 3.8 |
+| Reusable Container | 1.0 |
 
 ---
 
-# 🎯 Project Goal
+### ⭐ Rating System
 
-To help auditors evaluate vendors based on environmental impact and encourage sustainable practices using data-driven insights.
+Based on average CO₂ over last 7 days:
+
+| Avg CO₂ | Rating |
+|---------|--------|
+| ≤ 50 | ⭐⭐⭐⭐⭐ |
+| ≤ 100 | ⭐⭐⭐⭐ |
+| ≤ 200 | ⭐⭐⭐ |
+| ≤ 350 | ⭐⭐ |
+| > 350 | ⭐ |
+
+Vendors are also ranked among all vendors under the same auditor, sorted by lowest average CO₂.
 
 ---
+
+### 📈 Recommendation Logic
+
+Based on average CO₂ and emission trend direction:
+
+| Avg CO₂ | Trend | Recommendation |
+|---------|-------|----------------|
+| ≤ 200 | Decreasing | Excellent vendor |
+| ≤ 200 | Increasing | Monitor vendor |
+| 200–350 | Decreasing | Acceptable |
+| 200–350 | Increasing | Warning |
+| > 500 | Decreasing | Give improvement time |
+| > 500 | Increasing | Replace vendor |
+| Any | Stable | Stable performance |
+
+---
+
+## 📱 Android App Screens
+
+### Vendor Flow
+```
+Login / Signup
+     ↓
+Vendor Dashboard
+  ├── Profile (name, shop, contract end date)
+  ├── Last 7 Days Sales list
+  ├── Add Today's Sales → Sales Input Screen
+  └── Logout
+```
+
+### Auditor Flow
+```
+Login / Signup
+     ↓
+Auditor Dashboard
+  ├── Auditor Profile
+  ├── Vendors List (clickable)
+  │     ↓
+  │   Vendor Detail Screen
+  │     ├── Last 7 Days Sales
+  │     ├── Rating & Rank
+  │     └── Emission Trend Chart
+  ├── Recommendations Panel
+  └── Logout
+```
+
+---
+
+## ⚙️ Setup & Running
+
+### Backend
+
+1. Clone the repo and create a virtual environment:
+```bash
+python -m venv .mini
+.mini\Scripts\activate      # Windows
+source .mini/bin/activate   # Mac/Linux
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Create a `.env` file:
+```
+Key=your_secret_key
+DATABASE_URL=mysql://user:password@localhost/dbname
+```
+
+4. Run migrations:
+```bash
+flask db init
+flask db migrate
+flask db upgrade
+```
+
+5. Start the server:
+```bash
+python run.py
+```
+Server runs on `http://127.0.0.1:5000`
+
+
+---
+
+## 🎯 Project Goal
+
+To help auditors evaluate vendors based on environmental impact and encourage sustainable practices through data-driven insights.

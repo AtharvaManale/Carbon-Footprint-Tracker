@@ -9,8 +9,13 @@ sales = Blueprint("sales", __name__)
 def get_products():
     if "user_id" in session:
         Products = products.query.all()
-        return jsonify({"Products":[{"Product_id":Product.product_id,
-                                     "Product_name":Product.name}] for Product in Products}), 200
+        return jsonify({"Products": [{
+                                        "Product_id": product.product_id, 
+                                        "Product_name": product.name
+                                      } 
+                                    for product in Products
+                                ]}), 200
+    return jsonify("Not logged in!"), 401
 
 @sales.route('/add', methods = ['POST', 'PUT'])
 def add_sales():

@@ -72,8 +72,22 @@ def trends(id):
 @analytics.route("/ratings", methods = ['GET'])
 def ratings():
     if "user_id" in session:
-        vendors = users.query.filter_by(role = "vendor", auditor_id = session['user_id']).all()
         limit_date = date.today() - timedelta(days=7)
+
+        # For auditors: show all their vendors' ratings
+        if session["user_role"] == "auditor":
+            vendors = users.query.filter_by(role="vendor", auditor_id=session['user_id']).all()
+        # For vendors: show ratings among vendors with same auditor
+        else:
+            current_vendor = users.query.get(session["user_id"])
+            if not current_vendor or not current_vendor.auditor_id:
+                return jsonify({
+                    "message": "Vendor ratings!",
+                    "ratings": [],
+                    "rating": 0,
+                    "rank": "-"
+                }), 200
+            vendors = users.query.filter_by(role="vendor", auditor_id=current_vendor.auditor_id).all()
 
         ratings = []
 
@@ -89,7 +103,7 @@ def ratings():
             emissions_by_date = defaultdict(float)
 
             for e in emissions:
-                emissions_by_date[e.sales_date] += e.total_co2
+                emissions_by_date[e.sales_date] += float(e.total_co2)
 
             total = sum(emissions_by_date.values())
 
@@ -97,13 +111,13 @@ def ratings():
 
             avg_emission = total / num_days if num_days > 0 else 0
 
-            if avg_emission <= 200:
+            if avg_emission <= 50:
                 rating = 5
-            elif avg_emission <= 350:
+            elif avg_emission <= 100:
                 rating = 4
-            elif avg_emission <= 500:
+            elif avg_emission <= 200:
                 rating = 3
-            elif avg_emission <= 700:
+            elif avg_emission <= 350:
                 rating = 2
             else:
                 rating = 1
@@ -120,9 +134,20 @@ def ratings():
         for i, vendor in enumerate(ratings, start=1):
             vendor["rank"] = i
 
+        # For vendors, also return their own rating and rank
+        if session["user_role"] == "vendor":
+            current_username = users.query.get(session["user_id"]).username
+            own_rating = next((r for r in ratings if r["vendor"] == current_username), None)
+            return jsonify({
+                "message": "Vendor ratings!",
+                "ratings": ratings,
+                "rating": own_rating["rating"] if own_rating else 0,
+                "rank": own_rating["rank"] if own_rating else "-"
+            }), 200
+
         return jsonify({
             "message": "Vendors ratings!",
             "ratings": ratings
         }), 200
-    
+
     return jsonify({"error":"Not logged in!"}), 401
