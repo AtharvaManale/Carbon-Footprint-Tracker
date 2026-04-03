@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_cors import CORS
 from Backend.extensions import db, migrate
 from Backend.config import Config
 from Backend.routes import auth, analytics, auditor, sales
@@ -8,8 +7,6 @@ from Backend.routes import auth, analytics, auditor, sales
 def create_app(config_class = Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-
-    CORS(app, supports_credentials=True, origins=['http://localhost:3000'])
 
     migrate.init_app(app, db)
     db.init_app(app)

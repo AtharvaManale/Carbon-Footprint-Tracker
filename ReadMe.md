@@ -12,7 +12,6 @@ A full-stack system to track vendor sales, calculate CO₂ emissions, analyze tr
 - SQLAlchemy ORM
 - Session-based Authentication
 - Flask-Migrate for DB migrations
-- Flask-CORS for cross-origin support
 
 ---
 
