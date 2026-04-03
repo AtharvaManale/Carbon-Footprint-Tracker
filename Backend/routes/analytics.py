@@ -111,13 +111,13 @@ def ratings():
 
             avg_emission = total / num_days if num_days > 0 else 0
 
-            if avg_emission <= 50:
+            if avg_emission <= 400:
                 rating = 5
-            elif avg_emission <= 100:
+            elif avg_emission <= 600:
                 rating = 4
-            elif avg_emission <= 200:
+            elif avg_emission <= 800:
                 rating = 3
-            elif avg_emission <= 350:
+            elif avg_emission <= 1000:
                 rating = 2
             else:
                 rating = 1

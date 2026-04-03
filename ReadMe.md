@@ -263,11 +263,11 @@ Based on average CO₂ over last 7 days:
 
 | Avg CO₂ | Rating |
 |---------|--------|
-| ≤ 50 | ⭐⭐⭐⭐⭐ |
-| ≤ 100 | ⭐⭐⭐⭐ |
-| ≤ 200 | ⭐⭐⭐ |
-| ≤ 350 | ⭐⭐ |
-| > 350 | ⭐ |
+| ≤ 400 | ⭐⭐⭐⭐⭐ |
+| ≤ 600 | ⭐⭐⭐⭐ |
+| ≤ 800 | ⭐⭐⭐ |
+| ≤ 1000 | ⭐⭐ |
+| > 1000 | ⭐ |
 
 Vendors are also ranked among all vendors under the same auditor, sorted by lowest average CO₂.
 
@@ -279,13 +279,19 @@ Based on average CO₂ and emission trend direction:
 
 | Avg CO₂ | Trend | Recommendation |
 |---------|-------|----------------|
-| ≤ 200 | Decreasing | Excellent vendor |
-| ≤ 200 | Increasing | Monitor vendor |
-| 200–350 | Decreasing | Acceptable |
-| 200–350 | Increasing | Warning |
-| > 500 | Decreasing | Give improvement time |
-| > 500 | Increasing | Replace vendor |
-| Any | Stable | Stable performance |
+| ≤ 400 | Decreasing | Excellent |
+| ≤ 400 | Increasing | Monitor |
+| ≤ 400 | Stable | Excellent |
+| 400–600 | Decreasing | Acceptable |
+| 400–600 | Increasing | Warning |
+| 400–600 | Stable | Acceptable |
+| 600–800 | Decreasing | Improvement Needed |
+| 600–800 | Increasing | Replace |
+| 600–800 | Stable | Stable |
+| 800–1000 | Decreasing | Improvement Needed |
+| 800–1000 | Increasing | Replace |
+| 800–1000 | Stable | Improvement Needed |
+| > 1000 | Any | Replace |
 
 ---
 

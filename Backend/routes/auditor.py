@@ -47,11 +47,11 @@ def vendors_sales_data(id):
 
             emissions = daily_emissions.query.filter(daily_emissions.vendor_id == id, daily_emissions.sales_date >= limit_date).all()
 
-            daily_emissions_data = []
+            daily_emissions_data = {}
 
             for emission in emissions:
                 edate = emission.sales_date.strftime("%d-%m-%Y")
-                daily_emissions_data.append({edate : emission.total_co2})
+                daily_emissions_data[edate] = emission.total_co2
 
             return jsonify({"message":"sales of last 7 days!",
                         "sales": data,
@@ -100,26 +100,21 @@ def recommendations():
                 else:
                     trend = "stable"
 
-                if avg_emission <= 50 and trend == "increasing":
-                    suggestion = "Monitor vendor"
-
-                elif avg_emission <= 50 and trend == "decreasing":
-                    suggestion = "Excellent vendor"
-
-                elif 50 < avg_emission <= 100 and trend == "increasing":
-                    suggestion = "Warning"
-
-                elif 50 < avg_emission <= 100 and trend == "decreasing":
-                    suggestion = "Acceptable"
-
-                elif avg_emission > 200 and trend == "increasing":
-                    suggestion = "Replace vendor"
-
-                elif avg_emission > 200 and trend == "decreasing":
-                    suggestion = "Give improvement time"
-
+                if avg_emission <= 400:
+                    suggestion = "Monitor" if trend == "increasing" else "Excellent"
+                elif avg_emission <= 600:
+                    suggestion = "Warning" if trend == "increasing" else "Acceptable"
+                elif avg_emission <= 800:
+                    if trend == "increasing":
+                        suggestion = "Replace"
+                    elif trend == "decreasing":
+                        suggestion = "Improvement Needed"
+                    else:
+                        suggestion = "Stable"
+                elif avg_emission <= 1000:
+                    suggestion = "Replace" if trend == "increasing" else "Improvement Needed"
                 else:
-                    suggestion = "Stable performance"
+                    suggestion = "Replace"
 
                 results.append({"vendor_id": vendor.id,
                                 "vendor_name": vendor.username,
@@ -132,3 +127,6 @@ def recommendations():
             return jsonify({"message": "Vendor recommendations",
                             "data": results
                             }), 200
+        return jsonify({"error": "Only auditors can access this panel!"}), 403
+
+    return jsonify("Not logged in!"), 401

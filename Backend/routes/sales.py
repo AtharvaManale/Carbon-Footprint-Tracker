@@ -1,5 +1,5 @@
 from flask import session, jsonify, request, Blueprint
-from Backend.models.models import sales_data, products
+from Backend.models.models import sales_data, products, daily_emissions
 from Backend.extensions import db
 from datetime import date, timedelta
 
@@ -94,6 +94,12 @@ def salesdata():
         last_7days = date.today() - timedelta(days=7)
 
         sales = sales_data.query.filter(sales_data.vendor_id == session["user_id"], sales_data.sales_date >= last_7days).all()
+        emissions = daily_emissions.query.filter(daily_emissions.vendor_id == session['user_id'], daily_emissions.sales_date >= last_7days).all()
+        emission_data = {}
+        for emission in emissions:
+            sdate = emission.sales_date.strftime("%d-%m-%Y")
+            Co2_Score = emission.total_co2
+            emission_data[sdate] = Co2_Score
 
         for sale in sales:
             sdate = sale.sales_date.strftime("%d-%m-%Y")
@@ -107,6 +113,7 @@ def salesdata():
             })
             
         return jsonify({"message":"sales of last 7 days!",
-                        "sales": data}), 200
+                        "sales": data,
+                        "daily_emission_score":emission_data}), 200
     
     return jsonify("Not logged in!"), 401

@@ -69,7 +69,16 @@ def login():
     session['user_id'] = user.id
     session['user_role'] = user.role
 
-    return jsonify({'message' : 'Logged in successfully!'}),200
+    return jsonify({
+        'message': 'Logged in successfully!',
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'shop_name': user.shop_name,
+            'role': user.role,
+            'ending_at': user.ending_at.isoformat() if user.ending_at else None
+        }
+    }), 200
 
 @auth.route('/logout', methods = ['GET', 'POST'])
 def logout():
@@ -88,7 +97,8 @@ def check_auth():
                     "id": user.id,
                     "username": user.username,
                     "shop_name": user.shop_name,
-                    "role": user.role
+                    "role": user.role,
+                    "ending_at": user.ending_at.isoformat() if user.ending_at else None
                 }
             }), 200
     return jsonify({"user": None}), 401
