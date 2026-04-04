@@ -74,10 +74,9 @@ def ratings():
     if "user_id" in session:
         limit_date = date.today() - timedelta(days=7)
 
-        # For auditors: show all their vendors' ratings
         if session["user_role"] == "auditor":
             vendors = users.query.filter_by(role="vendor", auditor_id=session['user_id']).all()
-        # For vendors: show ratings among vendors with same auditor
+
         else:
             current_vendor = users.query.get(session["user_id"])
             if not current_vendor or not current_vendor.auditor_id:
@@ -111,13 +110,13 @@ def ratings():
 
             avg_emission = total / num_days if num_days > 0 else 0
 
-            if avg_emission <= 400:
+            if avg_emission <= 350:
                 rating = 5
-            elif avg_emission <= 600:
+            elif avg_emission <= 500:
                 rating = 4
-            elif avg_emission <= 800:
+            elif avg_emission <= 650:
                 rating = 3
-            elif avg_emission <= 1000:
+            elif avg_emission <= 850:
                 rating = 2
             else:
                 rating = 1
@@ -134,7 +133,6 @@ def ratings():
         for i, vendor in enumerate(ratings, start=1):
             vendor["rank"] = i
 
-        # For vendors, also return their own rating and rank
         if session["user_role"] == "vendor":
             current_username = users.query.get(session["user_id"]).username
             own_rating = next((r for r in ratings if r["vendor"] == current_username), None)

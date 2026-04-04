@@ -102,3 +102,19 @@ def check_auth():
                 }
             }), 200
     return jsonify({"user": None}), 401
+
+@auth.route('/delete-account/<int:id>', methods=['POST'])
+def delete_account(id):
+    user = users.query.get(id)
+    
+    if not user:
+        return jsonify({"error": "User not found!"}), 404
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        session.clear()
+        return jsonify({"message": "Account deleted successfully!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Failed to delete account: {str(e)}"}), 500
