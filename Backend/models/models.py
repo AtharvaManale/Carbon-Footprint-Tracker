@@ -35,5 +35,5 @@ class sales_data(db.Model):
 class daily_emissions(db.Model):
     emission_id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    total_co2 = db.Column(Numeric(5,2), nullable = False)
+    total_co2 = db.Column(Numeric(8,2), nullable = False)
     sales_date = db.Column(db.Date, default = date.today)
